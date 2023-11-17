@@ -48,7 +48,7 @@ class TFNet(object):
 			self.say('\nLoading from .pb and .meta')
 			self.graph = tf.Graph()
 			device_name = FLAGS.gpuName \
-				if FLAGS.gpu > 0.0 else None
+					if FLAGS.gpu > 0.0 else None
 			with tf.device(device_name):
 				with self.graph.as_default() as g:
 					self.build_from_pb()
@@ -62,20 +62,19 @@ class TFNet(object):
 		args = [darknet.meta, FLAGS]
 		self.num_layer = len(darknet.layers)
 		self.framework = create_framework(*args)
-		
+
 		self.meta = darknet.meta
 
 		self.say('\nBuilding net ...')
 		start = time.time()
 		self.graph = tf.Graph()
 		device_name = FLAGS.gpuName \
-			if FLAGS.gpu > 0.0 else None
+				if FLAGS.gpu > 0.0 else None
 		with tf.device(device_name):
 			with self.graph.as_default() as g:
 				self.build_forward()
 				self.setup_meta_ops()
-		self.say('Finished in {}s\n'.format(
-			time.time() - start))
+		self.say(f'Finished in {time.time() - start}s\n')
 	
 	def build_from_pb(self):
 		with tf.gfile.FastGFile(self.FLAGS.pbLoad, "rb") as f:
@@ -110,7 +109,7 @@ class TFNet(object):
 		roof = self.num_layer - self.ntrain
 		self.say(HEADER, LINE)
 		for i, layer in enumerate(self.darknet.layers):
-			scope = '{}-{}'.format(str(i),layer.type)
+			scope = f'{str(i)}-{layer.type}'
 			args = [layer, state, i, roof, self.feed]
 			state = op_create(*args)
 			mess = state.verbalise()
@@ -128,7 +127,7 @@ class TFNet(object):
 
 		utility = min(self.FLAGS.gpu, 1.)
 		if utility > 0.0:
-			self.say('GPU mode with {} usage'.format(utility))
+			self.say(f'GPU mode with {utility} usage')
 			cfg['gpu_options'] = tf.GPUOptions(
 				per_process_gpu_memory_fraction = utility)
 			cfg['allow_soft_placement'] = True
@@ -137,11 +136,11 @@ class TFNet(object):
 			cfg['device_count'] = {'GPU': 0}
 
 		if self.FLAGS.train: self.build_train_op()
-		
+
 		if self.FLAGS.summary is not None:
 			self.summary_op = tf.summary.merge_all()
-			self.writer = tf.summary.FileWriter(self.FLAGS.summary + 'train')
-		
+			self.writer = tf.summary.FileWriter(f'{self.FLAGS.summary}train')
+
 		self.sess = tf.Session(config = tf.ConfigProto(**cfg))
 		self.sess.run(tf.global_variables_initializer())
 
@@ -149,7 +148,7 @@ class TFNet(object):
 		self.saver = tf.train.Saver(tf.global_variables(), 
 			max_to_keep = self.FLAGS.keep)
 		if self.FLAGS.load != 0: self.load_from_ckpt()
-		
+
 		if self.FLAGS.summary is not None:
 			self.writer.add_graph(self.sess.graph)
 
@@ -161,17 +160,17 @@ class TFNet(object):
 		darknet_pb = self.to_darknet()
 		flags_pb = self.FLAGS
 		flags_pb.verbalise = False
-		
+
 		flags_pb.train = False
 		# rebuild another tfnet. all const.
-		tfnet_pb = TFNet(flags_pb, darknet_pb)		
+		tfnet_pb = TFNet(flags_pb, darknet_pb)
 		tfnet_pb.sess = tf.Session(graph = tfnet_pb.graph)
 		# tfnet_pb.predict() # uncomment for unit testing
-		name = 'built_graph/{}.pb'.format(self.meta['name'])
+		name = f"built_graph/{self.meta['name']}.pb"
 		os.makedirs(os.path.dirname(name), exist_ok=True)
 		#Save dump of everything in meta
-		with open('built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
+		with open(f"built_graph/{self.meta['name']}.meta", 'w') as fp:
 			json.dump(self.meta, fp)
-		self.say('Saving const graph def to {}'.format(name))
+		self.say(f'Saving const graph def to {name}')
 		graph_def = tfnet_pb.sess.graph_def
 		tf.train.write_graph(graph_def,'./', name, False)

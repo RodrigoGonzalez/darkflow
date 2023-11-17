@@ -9,9 +9,9 @@ class reorg(BaseOp):
         shape = inp.get_shape().as_list()
         _, h, w, c = shape
         s = self.lay.stride
-        out = list()
+        out = []
         for i in range(int(h/s)):
-            row_i = list()
+            row_i = []
             for j in range(int(w/s)):
                 si, sj = s * i, s * j
                 boxij = inp[:, si: si+s, sj: sj+s,:]
@@ -41,9 +41,9 @@ class local(BaseOp):
         k = self.lay.w['kernels']
         ksz = self.lay.ksize
         half = int(ksz / 2)
-        out = list()
+        out = []
         for i in range(self.lay.h_out):
-            row_i = list()
+            row_i = []
             for j in range(self.lay.w_out):
                 kij = k[i * self.lay.w_out + j]
                 i_, j_ = i + 1 - half, j + 1 - half
@@ -60,8 +60,7 @@ class local(BaseOp):
         l = self.lay
         args = [l.ksize] * 2 + [l.pad] + [l.stride]
         args += [l.activation]
-        msg = 'loca {}x{}p{}_{}  {}'.format(*args)
-        return msg
+        return 'loca {}x{}p{}_{}  {}'.format(*args)
 
 class convolutional(BaseOp):
     def forward(self):
@@ -94,8 +93,7 @@ class convolutional(BaseOp):
         args = [l.ksize] * 2 + [l.pad] + [l.stride]
         args += [l.batch_norm * '+bnorm']
         args += [l.activation]
-        msg = 'conv {}x{}p{}_{}  {}  {}'.format(*args)
-        return msg
+        return 'conv {}x{}p{}_{}  {}  {}'.format(*args)
 
 class conv_select(convolutional):
     def speak(self):
@@ -103,8 +101,7 @@ class conv_select(convolutional):
         args = [l.ksize] * 2 + [l.pad] + [l.stride]
         args += [l.batch_norm * '+bnorm']
         args += [l.activation]
-        msg = 'sele {}x{}p{}_{}  {}  {}'.format(*args)
-        return msg
+        return 'sele {}x{}p{}_{}  {}  {}'.format(*args)
 
 class conv_extract(convolutional):
     def speak(self):
@@ -112,5 +109,4 @@ class conv_extract(convolutional):
         args = [l.ksize] * 2 + [l.pad] + [l.stride]
         args += [l.batch_norm * '+bnorm']
         args += [l.activation]
-        msg = 'extr {}x{}p{}_{}  {}  {}'.format(*args)
-        return msg
+        return 'extr {}x{}p{}_{}  {}  {}'.format(*args)

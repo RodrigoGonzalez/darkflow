@@ -62,9 +62,9 @@ class conv_extract_layer(Layer):
         b = np.take(b, self.out)
         assert1 = k.shape == tuple(self.wshape['kernel'])
         assert2 = b.shape == tuple(self.wshape['biases'])
-        assert assert1 and assert2, \
-        'Dimension not matching in {} recollect'.format(
-            self._signature)
+        assert (
+            assert1 and assert2
+        ), f'Dimension not matching in {self._signature} recollect'
         self.w['kernel'] = k
         self.w['biases'] = b
 

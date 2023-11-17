@@ -44,10 +44,10 @@ class argHandler(dict):
         print('Example usage: flow --imgdir sample_img/ --model cfg/yolo.cfg --load bin/yolo.weights')
         print('')
         print('Arguments:')
-        spacing = max([len(i) for i in self._descriptions.keys()]) + 2
+        spacing = max(len(i) for i in self._descriptions.keys()) + 2
         for item in self._descriptions:
             currentSpacing = spacing - len(item)
-            print('  --' + item + (' ' * currentSpacing) + self._descriptions[item])
+            print(f'  --{item}' + ' ' * currentSpacing + self._descriptions[item])
         print('')
         exit()
 
@@ -55,42 +55,54 @@ class argHandler(dict):
         print('')
         i = 1
         while i < len(args):
-            if args[i] == '-h' or args[i] == '--h' or args[i] == '--help':
+            if args[i] in ['-h', '--h', '--help']:
                 self.help() #Time for some self help! :)
             if len(args[i]) < 2:
-                print('ERROR - Invalid argument: ' + args[i])
+                print(f'ERROR - Invalid argument: {args[i]}')
                 print('Try running flow --help')
                 exit()
             argumentName = args[i][2:]
             if isinstance(self.get(argumentName), bool):
-                if not (i + 1) >= len(args) and (args[i + 1].lower() != 'false' and args[i + 1].lower() != 'true') and not args[i + 1].startswith('--'):
-                    print('ERROR - Expected boolean value (or no value) following argument: ' + args[i])
+                if (
+                    i + 1 < len(args)
+                    and args[i + 1].lower() != 'false'
+                    and args[i + 1].lower() != 'true'
+                    and not args[i + 1].startswith('--')
+                ):
+                    print(
+                        f'ERROR - Expected boolean value (or no value) following argument: {args[i]}'
+                    )
                     print('Try running flow --help')
                     exit()
-                elif not (i + 1) >= len(args) and (args[i + 1].lower() == 'false' or args[i + 1].lower() == 'true'):
+                elif i + 1 < len(args) and args[i + 1].lower() in ['false', 'true']:
                     self[argumentName] = (args[i + 1].lower() == 'true')
                     i += 1
                 else:
                     self[argumentName] = True
-            elif args[i].startswith('--') and not (i + 1) >= len(args) and not args[i + 1].startswith('--') and argumentName in self:
+            elif (
+                args[i].startswith('--')
+                and i + 1 < len(args)
+                and not args[i + 1].startswith('--')
+                and argumentName in self
+            ):
                 if isinstance(self[argumentName], float):
                     try:
                         args[i + 1] = float(args[i + 1])
                     except:
-                        print('ERROR - Expected float for argument: ' + args[i])
+                        print(f'ERROR - Expected float for argument: {args[i]}')
                         print('Try running flow --help')
                         exit()
                 elif isinstance(self[argumentName], int):
                     try:
                         args[i + 1] = int(args[i + 1])
                     except:
-                        print('ERROR - Expected int for argument: ' + args[i])
+                        print(f'ERROR - Expected int for argument: {args[i]}')
                         print('Try running flow --help')
                         exit()
                 self[argumentName] = args[i + 1]
                 i += 1
             else:
-                print('ERROR - Invalid argument: ' + args[i])
+                print(f'ERROR - Invalid argument: {args[i]}')
                 print('Try running flow --help')
                 exit()
             i += 1

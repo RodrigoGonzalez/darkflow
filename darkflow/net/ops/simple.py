@@ -6,13 +6,12 @@ from distutils.version import StrictVersion
 class route(BaseOp):
 	def forward(self):
 		routes = self.lay.routes
-		routes_out = list()
+		routes_out = []
 		for r in routes:
 			this = self.inp
 			while this.lay.number != r:
 				this = this.inp
-				assert this is not None, \
-				'Routing to non-existence {}'.format(r)
+				assert this is not None, f'Routing to non-existence {r}'
 			routes_out += [this.out]
 		self.out = tf.concat(routes_out, 3)
 
@@ -112,8 +111,7 @@ class maxpool(BaseOp):
 	
 	def speak(self):
 		l = self.lay
-		return 'maxp {}x{}p{}_{}'.format(
-			l.ksize, l.ksize, l.pad, l.stride)
+		return f'maxp {l.ksize}x{l.ksize}p{l.pad}_{l.stride}'
 
 
 class leaky(BaseOp):

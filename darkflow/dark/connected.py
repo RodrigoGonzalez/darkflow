@@ -34,10 +34,10 @@ class extract_layer(Layer):
         b = np.take(b, self.out)
         assert1 = w.shape == tuple(self.wshape['weights'])
         assert2 = b.shape == tuple(self.wshape['biases'])
-        assert assert1 and assert2, \
-        'Dimension does not match in {} recollect'.format(
-            self._signature)
-        
+        assert (
+            assert1 and assert2
+        ), f'Dimension does not match in {self._signature} recollect'
+
         self.w['weights'] = w
         self.w['biases'] = b
     

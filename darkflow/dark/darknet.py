@@ -13,16 +13,16 @@ class Darknet(object):
         self.get_weight_src(FLAGS)
         self.modify = False
 
-        print('Parsing {}'.format(self.src_cfg))
+        print(f'Parsing {self.src_cfg}')
         src_parsed = self.parse_cfg(self.src_cfg, FLAGS)
         self.src_meta, self.src_layers = src_parsed
-        
+
         if self.src_cfg == FLAGS.model:
             self.meta, self.layers = src_parsed
         else: 
-        	print('Parsing {}'.format(FLAGS.model))
-        	des_parsed = self.parse_cfg(FLAGS.model, FLAGS)
-        	self.meta, self.layers = des_parsed
+            print(f'Parsing {FLAGS.model}')
+            des_parsed = self.parse_cfg(FLAGS.model, FLAGS)
+            self.meta, self.layers = des_parsed
 
         self.load_weights()
 
@@ -40,18 +40,14 @@ class Darknet(object):
         if FLAGS.load == str(): FLAGS.load = int()
         if type(FLAGS.load) is int:
             self.src_cfg = FLAGS.model
-            if FLAGS.load: self.src_bin = None
-            elif not exist: self.src_bin = None
+            if FLAGS.load or not exist: self.src_bin = None
         else:
-            assert os.path.isfile(FLAGS.load), \
-            '{} not found'.format(FLAGS.load)
+            assert os.path.isfile(FLAGS.load), f'{FLAGS.load} not found'
             self.src_bin = FLAGS.load
             name = loader.model_name(FLAGS.load)
-            cfg_path = os.path.join(FLAGS.config, name + '.cfg')
+            cfg_path = os.path.join(FLAGS.config, f'{name}.cfg')
             if not os.path.isfile(cfg_path):
-                warnings.warn(
-                    '{} not found, use {} instead'.format(
-                    cfg_path, FLAGS.model))
+                warnings.warn(f'{cfg_path} not found, use {FLAGS.model} instead')
                 cfg_path = FLAGS.model
             self.src_cfg = cfg_path
             FLAGS.load = int()
@@ -64,7 +60,8 @@ class Darknet(object):
         """
         args = [model, FLAGS.binary]
         cfg_layers = cfg_yielder(*args)
-        meta = dict(); layers = list()
+        meta = dict()
+        layers = []
         for i, info in enumerate(cfg_layers):
             if i == 0: meta = info; continue
             else: new = create_darkop(*info)
@@ -75,12 +72,12 @@ class Darknet(object):
         """
         Use `layers` and Loader to load .weights file
         """
-        print('Loading {} ...'.format(self.src_bin))
+        print(f'Loading {self.src_bin} ...')
         start = time.time()
 
         args = [self.src_bin, self.src_layers]
         wgts_loader = loader.create_loader(*args)
         for layer in self.layers: layer.load(wgts_loader)
-        
+
         stop = time.time()
-        print('Finished in {}s'.format(stop - start))
+        print(f'Finished in {stop - start}s')

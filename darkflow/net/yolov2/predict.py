@@ -13,16 +13,14 @@ def expit(x):
 	return 1. / (1. + np.exp(-x))
 
 def _softmax(x):
-    e_x = np.exp(x - np.max(x))
-    out = e_x / e_x.sum()
-    return out
+	e_x = np.exp(x - np.max(x))
+	return e_x / e_x.sum()
 
 def findboxes(self, net_out):
 	# meta
 	meta = self.meta
-	boxes = list()
-	boxes=box_constructor(meta,net_out)
-	return boxes
+	boxes = []
+	return box_constructor(meta,net_out)
 
 def postprocess(self, net_out, im, save = True):
 	"""
@@ -35,11 +33,9 @@ def postprocess(self, net_out, im, save = True):
 	threshold = meta['thresh']
 	colors = meta['colors']
 	labels = meta['labels']
-	if type(im) is not np.ndarray:
-		imgcv = cv2.imread(im)
-	else: imgcv = im
+	imgcv = cv2.imread(im) if type(im) is not np.ndarray else im
 	h, w, _ = imgcv.shape
-	
+
 	resultsForJSON = []
 	for b in boxes:
 		boxResults = self.process_box(b, h, w, threshold)
@@ -63,7 +59,7 @@ def postprocess(self, net_out, im, save = True):
 	img_name = os.path.join(outfolder, os.path.basename(im))
 	if self.FLAGS.json:
 		textJSON = json.dumps(resultsForJSON)
-		textFile = os.path.splitext(img_name)[0] + ".json"
+		textFile = f"{os.path.splitext(img_name)[0]}.json"
 		with open(textFile, 'w') as f:
 			f.write(textJSON)
 		return

@@ -14,8 +14,7 @@ class Layer(object):
         self.wsize = dict() # weight size
         self.setup(*args[2:]) # set attr up
         self.present()
-        for var in self.wshape:
-            shp = self.wshape[var]
+        for var, shp in self.wshape.items():
             size = np.prod(shp)
             self.wsize[var] = size
 
@@ -33,8 +32,7 @@ class Layer(object):
 
     def load_weights(self, src_loader):
         val = src_loader([self.presenter])
-        if val is None: return None
-        else: return val.w
+        return None if val is None else val.w
 
     def load_ckpt(self, src_loader):
         result = dict()
@@ -61,8 +59,8 @@ class Layer(object):
         if var not in self.wshape:
             return None
         sig = str(self.number)
-        sig += '-' + self.type
-        sig += '/' + var
+        sig += f'-{self.type}'
+        sig += f'/{var}'
         return sig
 
     def recollect(self, w): self.w = w

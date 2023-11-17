@@ -25,13 +25,14 @@ def _save_ckpt(self, step, loss_profile):
 
     ckpt = file.format(model, step, '')
     ckpt = os.path.join(self.FLAGS.backup, ckpt)
-    self.say('Checkpoint at step {}'.format(step))
+    self.say(f'Checkpoint at step {step}')
     self.saver.save(self.sess, ckpt)
 
 
 def train(self):
     loss_ph = self.framework.placeholders
-    loss_mva = None; profile = list()
+    loss_mva = None
+    profile = []
 
     batches = self.framework.shuffle()
     loss_op = self.framework.loss
@@ -70,7 +71,7 @@ def train(self):
 
 def return_predict(self, im):
     assert isinstance(im, np.ndarray), \
-				'Image is not a np.ndarray'
+    'Image is not a np.ndarray'
     h, w, _ = im.shape
     im = self.framework.resize_input(im)
     this_inp = np.expand_dims(im, 0)
@@ -79,7 +80,7 @@ def return_predict(self, im):
     out = self.sess.run(self.out, feed_dict)[0]
     boxes = self.framework.findboxes(out)
     threshold = self.FLAGS.threshold
-    boxesInfo = list()
+    boxesInfo = []
     for box in boxes:
         tmpBox = self.framework.process_box(box, h, w, threshold)
         if tmpBox is None:
@@ -104,7 +105,7 @@ def predict(self):
     all_inps = [i for i in all_inps if self.framework.is_inp(i)]
     if not all_inps:
         msg = 'Failed to find any images in {} .'
-        exit('Error: {}'.format(msg.format(inp_path)))
+        exit(f'Error: {msg.format(inp_path)}')
 
     batch = min(self.FLAGS.batch, len(all_inps))
 
@@ -115,7 +116,8 @@ def predict(self):
         to_idx = min(from_idx + batch, len(all_inps))
 
         # collect images input in the batch
-        inp_feed = list(); new_all = list()
+        inp_feed = []
+        new_all = []
         this_batch = all_inps[from_idx:to_idx]
         for inp in this_batch:
             new_all += [inp]
@@ -126,23 +128,27 @@ def predict(self):
         this_batch = new_all
 
         # Feed to the net
-        feed_dict = {self.inp : np.concatenate(inp_feed, 0)}    
-        self.say('Forwarding {} inputs ...'.format(len(inp_feed)))
+        feed_dict = {self.inp : np.concatenate(inp_feed, 0)}
+        self.say(f'Forwarding {len(inp_feed)} inputs ...')
         start = time.time()
         out = self.sess.run(self.out, feed_dict)
-        stop = time.time(); last = stop - start
-        self.say('Total time = {}s / {} inps = {} ips'.format(
-            last, len(inp_feed), len(inp_feed) / last))
+        stop = time.time()
+        last = stop - start
+        self.say(
+            f'Total time = {last}s / {len(inp_feed)} inps = {len(inp_feed) / last} ips'
+        )
 
         # Post processing
-        self.say('Post processing {} inputs ...'.format(len(inp_feed)))
+        self.say(f'Post processing {len(inp_feed)} inputs ...')
         start = time.time()
         pool.map(lambda p: (lambda i, prediction:
             self.framework.postprocess(
                prediction, os.path.join(inp_path, this_batch[i])))(*p),
             enumerate(out))
-        stop = time.time(); last = stop - start
+        stop = time.time()
+        last = stop - start
 
         # Timing
-        self.say('Total time = {}s / {} inps = {} ips'.format(
-            last, len(inp_feed), len(inp_feed) / last))
+        self.say(
+            f'Total time = {last}s / {len(inp_feed)} inps = {len(inp_feed) / last} ips'
+        )

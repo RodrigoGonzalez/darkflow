@@ -20,11 +20,11 @@ def loss(self, net_out):
     S, B, C = m['side'], m['num'], m['classes']
     SS = S * S # number of grid cells
 
-    print('{} loss hyper-parameters:'.format(m['model']))
-    print('\tside    = {}'.format(m['side']))
-    print('\tbox     = {}'.format(m['num']))
-    print('\tclasses = {}'.format(m['classes']))
-    print('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
+    print(f"{m['model']} loss hyper-parameters:")
+    print(f"\tside    = {m['side']}")
+    print(f"\tbox     = {m['num']}")
+    print(f"\tclasses = {m['classes']}")
+    print(f'\tscales  = {[sprob, sconf, snoob, scoor]}')
 
     size1 = [None, SS, C]
     size2 = [None, SS, B]
@@ -84,9 +84,9 @@ def loss(self, net_out):
     self.fetch += [probs, confs, conid, cooid, proid]
     true = tf.concat([probs, confs, coord], 1)
     wght = tf.concat([proid, conid, cooid], 1)
-    print('Building {} loss'.format(m['model']))
+    print(f"Building {m['model']} loss")
     loss = tf.pow(net_out - true, 2)
     loss = tf.multiply(loss, wght)
     loss = tf.reduce_sum(loss, 1)
     self.loss = .5 * tf.reduce_mean(loss)
-    tf.summary.scalar('{} loss'.format(m['model']), self.loss)
+    tf.summary.scalar(f"{m['model']} loss", self.loss)

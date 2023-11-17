@@ -31,14 +31,12 @@ class BaseOp(object):
         self.out = None # tf.Tensor
         self.lay = layer
 
-        self.scope = '{}-{}'.format(
-            str(self.num), self.lay.type)
+        self.scope = f'{str(self.num)}-{self.lay.type}'
         self.gap = roof - self.num
-        self.var = not self.gap > 0
+        self.var = self.gap <= 0
         self.act = 'Load '
         self.convert(feed)
-        if self.var: self.train_msg = 'Yep! '
-        else: self.train_msg = 'Nope '
+        self.train_msg = 'Yep! ' if self.var else 'Nope '
         self.forward()
 
     def convert(self, feed):
@@ -78,7 +76,7 @@ class BaseOp(object):
         phtype = type(self.lay.h[ph])
         if phtype is not dict: return
 
-        sig = '{}/{}'.format(self.scope, ph)
+        sig = f'{self.scope}/{ph}'
         val = self.lay.h[ph]
 
         self.lay.h[ph] = tf.placeholder_with_default(

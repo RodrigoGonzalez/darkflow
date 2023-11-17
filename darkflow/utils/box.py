@@ -20,14 +20,11 @@ def overlap(x1,w1,x2,w2):
 def box_intersection(a, b):
     w = overlap(a.x, a.w, b.x, b.w);
     h = overlap(a.y, a.h, b.y, b.h);
-    if w < 0 or h < 0: return 0;
-    area = w * h;
-    return area;
+    return 0 if w < 0 or h < 0 else w * h;
 
 def box_union(a, b):
     i = box_intersection(a, b);
-    u = a.w * a.h + b.w * b.h - i;
-    return u;
+    return a.w * a.h + b.w * b.h - i
 
 def box_iou(a, b):
     return box_intersection(a, b) / box_union(a, b);

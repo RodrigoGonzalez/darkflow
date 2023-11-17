@@ -5,8 +5,7 @@ _LOSS_TYPE = ['sse','l2', 'smooth',
 def loss(self, net_out):
 	m = self.meta
 	loss_type = self.meta['type']
-	assert loss_type in _LOSS_TYPE, \
-	'Loss type {} not implemented'.format(loss_type)
+	assert loss_type in _LOSS_TYPE, f'Loss type {loss_type} not implemented'
 
 	out = net_out
 	out_shape = out.get_shape()

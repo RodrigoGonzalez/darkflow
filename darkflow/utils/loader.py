@@ -14,8 +14,8 @@ class loader(object):
                  'extract', 'conv-extract']
 
     def __init__(self, *args):
-        self.src_key = list()
-        self.vals = list()
+        self.src_key = []
+        self.vals = []
         self.load(*args)
 
     def __call__(self, key):
@@ -56,7 +56,7 @@ class weights_loader(loader):
         for i, layer in enumerate(src_layers):
             if layer.type not in self.VAR_LAYER: continue
             self.src_key.append([layer])
-            
+
             if walker.eof: new = None
             else: 
                 args = layer.signature
@@ -72,18 +72,17 @@ class weights_loader(loader):
             new.finalize(walker.transpose)
 
         if walker.path is not None:
-            assert walker.offset == walker.size, \
-            'expect {} bytes, found {}'.format(
-                walker.offset, walker.size)
-            print('Successfully identified {} bytes'.format(
-                walker.offset))
+            assert (
+                walker.offset == walker.size
+            ), f'expect {walker.offset} bytes, found {walker.size}'
+            print(f'Successfully identified {walker.offset} bytes')
 
 class checkpoint_loader(loader):
     """
     one who understands .ckpt files, very much
     """
     def load(self, ckpt, ignore):
-        meta = ckpt + '.meta'
+        meta = f'{ckpt}.meta'
         with tf.Graph().as_default() as graph:
             with tf.Session().as_default() as sess:
                 saver = tf.train.import_meta_graph(meta)
@@ -95,13 +94,11 @@ class checkpoint_loader(loader):
                     self.vals += [var.eval(sess)]
 
 def create_loader(path, cfg = None):
-    if path is None:
-        load_type = weights_loader
-    elif '.weights' in path:
+    if path is None or '.weights' in path:
         load_type = weights_loader
     else: 
         load_type = checkpoint_loader
-    
+
     return load_type(path, cfg)
 
 class weights_walker(object):
@@ -114,22 +111,23 @@ class weights_walker(object):
             return
         else: 
             self.size = os.path.getsize(path)# save the path
-            major, minor, revision, seen = np.memmap(path,
-                shape = (), mode = 'r', offset = 0,
-                dtype = '({})i4,'.format(4))
+            major, minor, revision, seen = np.memmap(
+                path, shape=(), mode='r', offset=0, dtype='(4)i4,'
+            )
             self.transpose = major > 1000 or minor > 1000
             self.offset = 16
 
     def walk(self, size):
         if self.eof: return None
         end_point = self.offset + 4 * size
-        assert end_point <= self.size, \
-        'Over-read {}'.format(self.path)
+        assert end_point <= self.size, f'Over-read {self.path}'
 
         float32_1D_array = np.memmap(
-            self.path, shape = (), mode = 'r', 
-            offset = self.offset,
-            dtype='({})float32,'.format(size)
+            self.path,
+            shape=(),
+            mode='r',
+            offset=self.offset,
+            dtype=f'({size})float32,',
         )
 
         self.offset = end_point
@@ -144,7 +142,7 @@ def model_name(file_path):
         file_name = file_name.split('.')
         ext = file_name[-1]
         file_name = '.'.join(file_name[:-1])
-    if ext == str() or ext == 'meta': # ckpt file
+    if ext in [str(), 'meta']: # ckpt file
         file_name = file_name.split('-')
         num = int(file_name[-1])
         return '-'.join(file_name[:-1])

@@ -34,7 +34,7 @@ def labels(meta, FLAGS):
             print("Model has name yolo9000, loading yolo9000 labels.")
             file = os.path.join(FLAGS.config, nine_names)
         with open(file, 'r') as f:
-            meta['labels'] = list()
+            meta['labels'] = []
             labs = [l.strip() for l in f.readlines()]
             for lab in labs:
                 if lab == '----': break

@@ -13,10 +13,9 @@ def parse(self, exclusive = False):
     ann = self.FLAGS.annotation
     if not os.path.isdir(ann):
         msg = 'Annotation directory not found {} .'
-        exit('Error: {}'.format(msg.format(ann)))
-    print('\n{} parsing {}'.format(meta['model'], ann))
-    dumps = pascal_voc_clean_xml(ann, meta['labels'], exclusive)
-    return dumps
+        exit(f'Error: {msg.format(ann)}')
+    print(f"\n{meta['model']} parsing {ann}")
+    return pascal_voc_clean_xml(ann, meta['labels'], exclusive)
 
 
 def _batch(self, chunk):
@@ -97,7 +96,7 @@ def shuffle(self):
     data = self.parse()
     size = len(data)
 
-    print('Dataset of {} instance(s)'.format(size))
+    print(f'Dataset of {size} instance(s)')
     if batch > size: self.FLAGS.batch = batch = size
     batch_per_epoch = int(size / batch)
 
@@ -105,7 +104,7 @@ def shuffle(self):
         shuffle_idx = perm(np.arange(size))
         for b in range(batch_per_epoch):
             # yield these
-            x_batch = list()
+            x_batch = []
             feed_batch = dict()
 
             for j in range(b*batch, b*batch+batch):
@@ -122,9 +121,9 @@ def shuffle(self):
                     feed_batch[key] = np.concatenate([ 
                         old_feed, [new] 
                     ])      
-            
+
             x_batch = np.concatenate(x_batch, 0)
             yield x_batch, feed_batch
-        
-        print('Finish {} epoch(es)'.format(i + 1))
+
+        print(f'Finish {i + 1} epoch(es)')
 

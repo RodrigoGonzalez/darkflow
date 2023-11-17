@@ -47,7 +47,7 @@ def download_file(url, savePath):
     fileName = savePath.split("/")[-1]
     if not os.path.isfile(savePath):
         os.makedirs(os.path.dirname(savePath), exist_ok=True) #Make directories nessecary for file incase they don't exist
-        print("Downloading " + fileName + " file...")
+        print(f"Downloading {fileName} file...")
         r = requests.get(url, stream=True)
         with open(savePath, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024): 
@@ -55,7 +55,7 @@ def download_file(url, savePath):
                     f.write(chunk)
         r.close()
     else:
-        print("Found existing " + fileName + " file.")
+        print(f"Found existing {fileName} file.")
 
 yolo_small_WeightPath = os.path.join(buildPath, "bin", yolo_small_Download.split("/")[-1])
 yolo_small_CfgPath = os.path.join(buildPath, "cfg", "v1", "{0}.cfg".format(os.path.splitext(os.path.basename(yolo_small_WeightPath))[0]))
@@ -66,8 +66,16 @@ yolo_CfgPath = os.path.join(buildPath, "cfg", "{0}.cfg".format(os.path.splitext(
 tiny_yolo_voc_WeightPath = os.path.join(buildPath, "bin", tiny_yolo_voc_Download.split("/")[-1])
 tiny_yolo_voc_CfgPath = os.path.join(buildPath, "cfg", "{0}.cfg".format(os.path.splitext(os.path.basename(tiny_yolo_voc_WeightPath))[0]))
 
-pbPath = os.path.join(buildPath, "built_graph", os.path.splitext(os.path.basename(yolo_WeightPath))[0] + ".pb")
-metaPath = os.path.join(buildPath, "built_graph", os.path.splitext(os.path.basename(yolo_WeightPath))[0] + ".meta")
+pbPath = os.path.join(
+    buildPath,
+    "built_graph",
+    f"{os.path.splitext(os.path.basename(yolo_WeightPath))[0]}.pb",
+)
+metaPath = os.path.join(
+    buildPath,
+    "built_graph",
+    f"{os.path.splitext(os.path.basename(yolo_WeightPath))[0]}.meta",
+)
 
 generalConfigPath = os.path.join(buildPath, "cfg")
 
@@ -94,18 +102,25 @@ def compareSingleObjects(firstObject, secondObject, width, height, threshCompare
         return False
     if(abs(firstObject["bottomright"]["y"] - secondObject["bottomright"]["y"]) > height * posCompare):
         return False
-    if(abs(firstObject["confidence"] - secondObject["confidence"]) > threshCompare):
-        return False
-    return True
+    return (
+        abs(firstObject["confidence"] - secondObject["confidence"])
+        <= threshCompare
+    )
 
 def compareObjectData(defaultObjects, newObjects, width, height, threshCompare, posCompare):
     currentlyFound = False
     for firstObject in defaultObjects:
-        currentlyFound = False
-        for secondObject in newObjects:
-            if compareSingleObjects(firstObject, secondObject, width, height, threshCompare, posCompare):
-                currentlyFound = True
-                break
+        currentlyFound = any(
+            compareSingleObjects(
+                firstObject,
+                secondObject,
+                width,
+                height,
+                threshCompare,
+                posCompare,
+            )
+            for secondObject in newObjects
+        )
         if not currentlyFound:
             return False
     return True

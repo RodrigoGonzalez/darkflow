@@ -9,17 +9,17 @@ import glob
 
 
 def _pp(l): # pretty printing 
-    for i in l: print('{}: {}'.format(i,l[i]))
+    for i in l:
+        print(f'{i}: {l[i]}')
 
 def pascal_voc_clean_xml(ANN, pick, exclusive = False):
-    print('Parsing for {} {}'.format(
-            pick, 'exclusively' * int(exclusive)))
+    print(f"Parsing for {pick} {'exclusively' * int(exclusive)}")
 
-    dumps = list()
+    dumps = []
     cur_dir = os.getcwd()
     os.chdir(ANN)
     annotations = os.listdir('.')
-    annotations = glob.glob(str(annotations)+'*.xml')
+    annotations = glob.glob(f'{str(annotations)}*.xml')
     size = len(annotations)
 
     for i, file in enumerate(annotations):
@@ -31,19 +31,18 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
         bar_arg += [file]
         sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
         sys.stdout.flush()
-        
-        # actual parsing 
-        in_file = open(file)
-        tree=ET.parse(in_file)
-        root = tree.getroot()
-        jpg = str(root.find('filename').text)
-        imsize = root.find('size')
-        w = int(imsize.find('width').text)
-        h = int(imsize.find('height').text)
-        all = list()
 
-        for obj in root.iter('object'):
-                current = list()
+        with open(file) as in_file:
+            tree=ET.parse(in_file)
+            root = tree.getroot()
+            jpg = str(root.find('filename').text)
+            imsize = root.find('size')
+            w = int(imsize.find('width').text)
+            h = int(imsize.find('height').text)
+            all = []
+
+            for obj in root.iter('object'):
+                current = []
                 name = obj.find('name').text
                 if name not in pick:
                         continue
@@ -56,10 +55,8 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
                 current = [name,xn,yn,xx,yx]
                 all += [current]
 
-        add = [[jpg, [w, h, all]]]
-        dumps += add
-        in_file.close()
-
+            add = [[jpg, [w, h, all]]]
+            dumps += add
     # gather all stats
     stat = dict()
     for dump in dumps:
@@ -73,7 +70,7 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
 
     print('\nStatistics:')
     _pp(stat)
-    print('Dataset size: {}'.format(len(dumps)))
+    print(f'Dataset size: {len(dumps)}')
 
     os.chdir(cur_dir)
     return dumps

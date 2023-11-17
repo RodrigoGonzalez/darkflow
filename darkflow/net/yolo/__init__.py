@@ -16,6 +16,7 @@ def constructor(self, meta, FLAGS):
 		r = 2 - (indx % base2) / base
 		g = 2 - (indx % base2) % base
 		return (b * 127, r * 127, g * 127)
+
 	if 'labels' not in meta:
 		misc.labels(meta, FLAGS) #We're not loading from a .pb so we do need to load the labels
 	assert len(meta['labels']) == meta['classes'], (
@@ -24,12 +25,12 @@ def constructor(self, meta, FLAGS):
 	).format(meta['model'])
 
 	# assign a color for each label
-	colors = list()
+	colors = []
 	base = int(np.ceil(pow(meta['classes'], 1./3)))
 	for x in range(len(meta['labels'])): 
 		colors += [_to_color(x, base)]
 	meta['colors'] = colors
-	self.fetch = list()
+	self.fetch = []
 	self.meta, self.FLAGS = meta, FLAGS
 
 	# over-ride the threshold in meta if FLAGS has it.

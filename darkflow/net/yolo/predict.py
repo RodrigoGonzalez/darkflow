@@ -17,8 +17,7 @@ def resize_input(self, im):
 	h, w, c = self.meta['inp_size']
 	imsz = cv2.resize(im, (w, h))
 	imsz = imsz / 255.
-	imsz = imsz[:,:,::-1]
-	return imsz
+	return imsz[:,:,::-1]
 
 def process_box(self, b, h, w, threshold):
 	max_indx = np.argmax(b.probs)
@@ -29,22 +28,20 @@ def process_box(self, b, h, w, threshold):
 		right = int ((b.x + b.w/2.) * w)
 		top   = int ((b.y - b.h/2.) * h)
 		bot   = int ((b.y + b.h/2.) * h)
-		if left  < 0    :  left = 0
-		if right > w - 1: right = w - 1
-		if top   < 0    :   top = 0
-		if bot   > h - 1:   bot = h - 1
-		mess = '{}'.format(label)
+		left = max(left, 0)
+		right = min(right, w - 1)
+		top = max(top, 0)
+		bot = min(bot, h - 1)
+		mess = f'{label}'
 		return (left, right, top, bot, mess, max_indx, max_prob)
 	return None
 
 def findboxes(self, net_out):
 	meta, FLAGS = self.meta, self.FLAGS
 	threshold = FLAGS.threshold
-	
+
 	boxes = []
-	boxes = yolo_box_constructor(meta, net_out, threshold)
-	
-	return boxes
+	return yolo_box_constructor(meta, net_out, threshold)
 
 def preprocess(self, im, allobj = None):
 	"""
@@ -71,8 +68,7 @@ def preprocess(self, im, allobj = None):
 		im = imcv2_recolor(im)
 
 	im = self.resize_input(im)
-	if allobj is None: return im
-	return im#, np.array(im) # for unit testing
+	return im
 
 def postprocess(self, net_out, im, save = True):
 	"""
@@ -84,10 +80,7 @@ def postprocess(self, net_out, im, save = True):
 
 	boxes = self.findboxes(net_out)
 
-	if type(im) is not np.ndarray:
-		imgcv = cv2.imread(im)
-	else: imgcv = im
-
+	imgcv = cv2.imread(im) if type(im) is not np.ndarray else im
 	h, w, _ = imgcv.shape
 	resultsForJSON = []
 	for b in boxes:
@@ -115,7 +108,7 @@ def postprocess(self, net_out, im, save = True):
 	img_name = os.path.join(outfolder, os.path.basename(im))
 	if self.FLAGS.json:
 		textJSON = json.dumps(resultsForJSON)
-		textFile = os.path.splitext(img_name)[0] + ".json"
+		textFile = f"{os.path.splitext(img_name)[0]}.json"
 		with open(textFile, 'w') as f:
 			f.write(textJSON)
 		return	

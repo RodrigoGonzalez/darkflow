@@ -13,23 +13,23 @@ old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
 def build_train_op(self):
     self.framework.loss(self.out)
-    self.say('Building {} train op'.format(self.meta['model']))
+    self.say(f"Building {self.meta['model']} train op")
     optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
     gradients = optimizer.compute_gradients(self.framework.loss)
     self.train_op = optimizer.apply_gradients(gradients)
 
 def load_from_ckpt(self):
     if self.FLAGS.load < 0: # load lastest ckpt
-        with open(self.FLAGS.backup + 'checkpoint', 'r') as f:
+        with open(f'{self.FLAGS.backup}checkpoint', 'r') as f:
             last = f.readlines()[-1].strip()
             load_point = last.split(' ')[1]
             load_point = load_point.split('"')[1]
             load_point = load_point.split('-')[-1]
             self.FLAGS.load = int(load_point)
-    
+
     load_point = os.path.join(self.FLAGS.backup, self.meta['name'])
-    load_point = '{}-{}'.format(load_point, self.FLAGS.load)
-    self.say('Loading from {}'.format(load_point))
+    load_point = f'{load_point}-{self.FLAGS.load}'
+    self.say(f'Loading from {load_point}')
     try: self.saver.restore(self.sess, load_point)
     except: load_old_graph(self, load_point)
 
@@ -44,13 +44,12 @@ def say(self, *msgs):
 def load_old_graph(self, ckpt): 
     ckpt_loader = create_loader(ckpt)
     self.say(old_graph_msg.format(ckpt))
-    
+
     for var in tf.global_variables():
         name = var.name.split(':')[0]
         args = [name, var.get_shape()]
         val = ckpt_loader(args)
-        assert val is not None, \
-        'Cannot find and load {}'.format(var.name)
+        assert val is not None, f'Cannot find and load {var.name}'
         shp = val.shape
         plh = tf.placeholder(tf.float32, shp)
         op = tf.assign(var, plh)
@@ -68,21 +67,20 @@ def _get_fps(self, frame):
 def camera(self):
     file = self.FLAGS.demo
     SaveVideo = self.FLAGS.saveVideo
-    
+
     if file == 'camera':
         file = 0
     else:
-        assert os.path.isfile(file), \
-        'file {} does not exist'.format(file)
-        
+        assert os.path.isfile(file), f'file {file} does not exist'
+
     camera = cv2.VideoCapture(file)
-    
+
     if file == 0:
         self.say('Press [ESC] to quit demo')
-        
+
     assert camera.isOpened(), \
     'Cannot capture source'
-    
+
     if file == 0:#camera window
         cv2.namedWindow('', 0)
         _, frame = camera.read()
@@ -95,18 +93,17 @@ def camera(self):
     if SaveVideo:
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         if file == 0:#camera window
-          fps = 1 / self._get_fps(frame)
-          if fps < 1:
-            fps = 1
+            fps = 1 / self._get_fps(frame)
+            fps = max(fps, 1)
         else:
             fps = round(camera.get(cv2.CAP_PROP_FPS))
         videoWriter = cv2.VideoWriter(
             'video.avi', fourcc, fps, (width, height))
 
     # buffers for demo in batch
-    buffer_inp = list()
-    buffer_pre = list()
-    
+    buffer_inp = []
+    buffer_pre = []
+
     elapsed = int()
     start = timer()
     self.say('Press [ESC] to quit demo')
@@ -120,7 +117,7 @@ def camera(self):
         preprocessed = self.framework.preprocess(frame)
         buffer_inp.append(frame)
         buffer_pre.append(preprocessed)
-        
+
         # Only process and imshow when queue is full
         if elapsed % self.FLAGS.queue == 0:
             feed_dict = {self.inp: buffer_pre}
@@ -133,8 +130,8 @@ def camera(self):
                 if file == 0: #camera window
                     cv2.imshow('', postprocessed)
             # Clear Buffers
-            buffer_inp = list()
-            buffer_pre = list()
+            buffer_inp = []
+            buffer_pre = []
 
         if elapsed % 5 == 0:
             sys.stdout.write('\r')
